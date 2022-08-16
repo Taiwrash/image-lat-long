@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera For Latitude and Longitude</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .camera{
+            width: 90vw;
+            height: 90vh;
+            background: linear-gradient(45deg, #457645 50%, #098723 50%);
+            padding: 2em;
+        }
+        .photo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 4em 0;
+        }
+
+        .video-area {
+            width: 100%;
+            /* height: auto; */
+            height: 100%;
+   
+        }
+        button {
+            display: block;
+            height: 2em;
+            width: 4rem;
+            outline: none;
+            background-color: aliceblue;
+            color: #457645;
+            border: none;
+            font-size: larger;
+        }
+        p {
+            padding: 1em 2em;
+            background-color: #aad2aa;
+            color: black;
+            margin: 1em 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <div class="camera">
+            <video class="video-area"></video>
+            <button class="snap">Snap!</button>
+        </div>
+        <div class="photo">
+            <canvas id="photo-canvas"></canvas>
+            <marquee behavior="smooth-scroll" direction="backward"><span>Press Snap to retake another one, after first snap!</span></marquee>
+        </div>
+        <p class="lat"></p>
+        <p class="long"></p>
+        <p class="dev-lat"></p>
+        <p class="dev-long"></p>
+    </main>
+    <script>
+        const getVideo = () =>{
+            navigator.mediaDevices.getUserMedia({
+                video: {width:1920, height:1080}
+            }).then(stream =>{
+                let video = document.querySelector(".video-area")
+                video.srcObject = stream
+                video.play()
+            }).catch(err=>{
+                console.error(err);
+            })
+        }
+        //Take picture area
+
+        const takePicture = () =>{
+            const width = 414
+            const height = width / (16/9)
+            let video = document.querySelector(".video-area")
+            let photo = document.querySelector("#photo-canvas")
+            photo.width = width
+            photo.height = height
+            let ctx = photo.getContext('2d')
+            ctx.drawImage(video, 0, 0, width, height)
+        }
+
+
+
+        // save position in memory 
+        let lat  = []
+        let long  = []
+        // Get Location method 
+        const getUserLocation =()=>{
+            if(navigator.geolocation){
+                navigator.geolocation.getCurrentPosition(locateUser)
+            }else{
+                alert("Geolocation not supportted")
+            }
+        }
+            function locateUser(position){
+            // alert(`You are at lat ${position.coords.latitude} and long ${position.coords.longitude}`)
+            lat.push(position.coords.latitude)
+            long.push(position.coords.longitude)
+            console.log(position.coords.longitude);
+        }
+
+        const mean = () =>{
+            if(lat.length == 8){
+                total_latitude = lat.reduce((acc,curr)=> acc + curr)
+                total_longitude = long.reduce((acc,curr)=> acc + curr)
+                mean_lat = total_latitude / lat.length
+                mean_long = total_longitude / long.length
+                // Refer to standard_deviation method 
+                standard_deviation (mean_lat, mean_long)
+                const latitude_html = document.querySelector(".lat")
+                const longitude_html = document.querySelector(".long")
+                latitude_html.innerHTML = `Latitude mean is: ${mean_lat}`
+                longitude_html.innerHTML = `Longitude mean is: ${mean_long}`
+                alert("Scroll to the bottom to view the result, you've taken the eightth picture")
+                return latitude_html, longitude_html
+            }
+        }
+
+        function standard_deviation (mean_lat, mean_long){
+            if(lat.length == 8){
+                let store_lat = 0
+                let store_long = 0
+                // standard_deviation for latitude
+                lat.map(item =>{
+                    console.log(mean_lat);
+                    store_lat += ((item - mean_lat)**2)
+                   
+                })
+                dev_lat = Math.sqrt(store_lat / lat.length)
+
+                // standard_deviation for latitude
+                long.map(item =>{
+                    store_long += ((item - mean_long)**2)
+                })
+                dev_long = Math.sqrt(store_long / long.length)
+                const latitude_html_dev = document.querySelector(".dev-lat")
+                const longitude_html_dev = document.querySelector(".dev-long")
+                latitude_html_dev.innerHTML = `Latitude standard deviation is: ${dev_lat}`
+                longitude_html_dev.innerHTML = `Longitude standard deviation is: ${dev_long}`
+                return latitude_html_dev, longitude_html_dev
+            }
+
+        }
+        
+        window.addEventListener('load', ()=>{
+            // Getting the video on loading
+            getVideo()
+
+            // Taking the picture 
+            let snapBtn =  document.querySelector('.snap')
+            snapBtn.addEventListener('click', ()=>{
+                takePicture()
+                // Getting user location
+                getUserLocation()
+                mean()
+                // standard_deviation()
+            })
+
+        })
+    </script>
+</body>
+</html>
