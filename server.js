@@ -11,4 +11,4 @@ http.createServer((req,res)=>{
             res.end(data)
         })
     }
-}).listen(3000 || process.env.PORT, () => console.log("Server Running on port http://localhost:3000/"))
+}).listen(process.env.PORT || 3000, () => console.log("Server Running on port http://localhost:3000/"))
