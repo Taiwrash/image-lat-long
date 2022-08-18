@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <title>Camera For Latitude and Longitude</title>
     <style>
         * {
@@ -53,6 +54,7 @@
             margin: 1em 0;
             font-size: 16px;
             font-weight: bold;
+            width: 50%;
         }
     </style>
 </head>
@@ -61,10 +63,14 @@
     <main>
         <div class="camera">
             <video class="video-area"></video>
-            <button class="snap">Snap!</button>
+            <button class="snap text-center display-6">Snap!</button>
         </div>
         <div class="photo">
-            <canvas id="photo-canvas"></canvas>
+            <div class="container">
+                <div class="photo-pair row">
+                    <!-- <canvas id="photo-canvas"></canvas> -->
+                </div>
+            </div>
             <marquee behavior="smooth-scroll" direction="backward"><span>Press Snap to retake another one, after first snap!</span></marquee>
         </div>
         <p class="lat"></p>
@@ -84,24 +90,11 @@
                 console.error(err);
             })
         }
-        //Take picture area
 
-        const takePicture = () =>{
-            const width = 414
-            const height = width / (16/9)
-            let video = document.querySelector(".video-area")
-            let photo = document.querySelector("#photo-canvas")
-            photo.width = width
-            photo.height = height
-            let ctx = photo.getContext('2d')
-            ctx.drawImage(video, 0, 0, width, height)
-        }
-
-
-
-        // save position in memory 
+       // save position in memory 
         let lat  = []
         let long  = []
+
         // Get Location method 
         const getUserLocation =()=>{
             if(navigator.geolocation){
@@ -114,7 +107,33 @@
             // alert(`You are at lat ${position.coords.latitude} and long ${position.coords.longitude}`)
             lat.push(position.coords.latitude)
             long.push(position.coords.longitude)
-            console.log(position.coords.longitude);
+        }
+
+        // updater 
+        let i = 0
+        
+        //Take picture area
+        const takePicture = () =>{
+            const width = 414
+            const height = width / (16/9)
+            let video = document.querySelector(".video-area")
+            const pair_div = document.querySelector(".photo-pair")
+            // let photo = document.querySelector("#photo-canvas")
+            let output = document.createElement("canvas")
+            let output_container = document.createElement("div")
+            output_container.setAttribute("class","col")
+            output.setAttribute("id","photo-canvas")
+            let output_locations = document.createElement("p")
+            output_locations.textContent = `Latitude: ${lat[i]}\n Longitude: ${long[i]}`
+            i++
+            output.width = width
+            output.height = height
+            output_container.appendChild(output)
+            output_container.appendChild(output_locations)
+            pair_div.appendChild(output_container)
+            let ctx = output.getContext('2d')
+            ctx.drawImage(video, 0, 0, width, height)
+            // pair_picture(width, height, photo, video)
         }
 
         const mean = () =>{
@@ -123,13 +142,14 @@
                 total_longitude = long.reduce((acc,curr)=> acc + curr)
                 mean_lat = total_latitude / lat.length
                 mean_long = total_longitude / long.length
+
                 // Refer to standard_deviation method 
                 standard_deviation (mean_lat, mean_long)
                 const latitude_html = document.querySelector(".lat")
                 const longitude_html = document.querySelector(".long")
                 latitude_html.innerHTML = `Latitude mean is: ${mean_lat}`
                 longitude_html.innerHTML = `Longitude mean is: ${mean_long}`
-                alert("Scroll to the bottom to view the result, you've taken the eightth picture")
+                alert("Scroll to the bottom to view the result, you've taken the eighth picture")
                 return latitude_html, longitude_html
             }
         }
@@ -140,7 +160,6 @@
                 let store_long = 0
                 // standard_deviation for latitude
                 lat.map(item =>{
-                    console.log(mean_lat);
                     store_lat += ((item - mean_lat)**2)
                    
                 })
@@ -164,11 +183,14 @@
             // Getting the video on loading
             getVideo()
 
+
+            // Getting user location
+            getUserLocation()
             // Taking the picture 
             let snapBtn =  document.querySelector('.snap')
             snapBtn.addEventListener('click', ()=>{
+
                 takePicture()
-                // Getting user location
                 getUserLocation()
                 mean()
                 // standard_deviation()
